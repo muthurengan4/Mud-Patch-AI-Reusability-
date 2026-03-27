@@ -1,0 +1,103 @@
+{
+  "project_name": "Mud Patch Garment Reusability AI Engine",
+  "theme": "light",
+  "archetype": "1_organic_earthy",
+  "mood": "trustworthy, sustainable, efficient, modern, eco-friendly",
+  "colors": {
+    "primary": {
+      "DEFAULT": "#386641",
+      "foreground": "#ffffff",
+      "hover": "#2b5033",
+      "light": "#a7c957"
+    },
+    "background": {
+      "DEFAULT": "#fcfdfc",
+      "card": "#ffffff",
+      "glass": "rgba(255, 255, 255, 0.7)"
+    },
+    "text": {
+      "primary": "#1f2923",
+      "secondary": "#4b554e",
+      "muted": "#8b968e"
+    },
+    "border": {
+      "DEFAULT": "#e6ede7",
+      "focus": "#a7c957"
+    },
+    "status": {
+      "resale": "#10b981",
+      "refurbish": "#f59e0b",
+      "recycle": "#14b8a6",
+      "downcycle": "#d97757",
+      "waste": "#ef4444"
+    }
+  },
+  "typography": {
+    "headings": {
+      "family": "Outfit, sans-serif",
+      "weight_primary": "600",
+      "weight_hero": "700"
+    },
+    "body": {
+      "family": "Figtree, sans-serif",
+      "weight_regular": "400",
+      "weight_medium": "500"
+    }
+  },
+  "layout": {
+    "dashboard_grid": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6",
+    "bento_spacing": "gap-6",
+    "container_padding": "p-6 sm:p-8",
+    "radius": {
+      "card": "16px",
+      "button": "8px",
+      "input": "8px",
+      "image": "12px"
+    },
+    "shadows": {
+      "card": "0 4px 20px -2px rgba(56, 102, 65, 0.05)",
+      "hover": "0 10px 30px -4px rgba(56, 102, 65, 0.1)"
+    }
+  },
+  "components": {
+    "rvs_visualizer": "Circular progress ring or gauge built with pure SVG or Recharts, using primary green for high scores, amber for medium, and terracotta for low scores.",
+    "cards": "Flat background (no glassmorphism for health/sustainable dashboard unless header), 1px subtle border (#e6ede7), generous internal padding (p-6).",
+    "buttons": "Solid primary color for primary actions, subtle ghost/outline variants for secondary. Must have hover and focus states.",
+    "inputs": "Shadcn standard but with 8px border radius and focus ring colored with primary light (#a7c957).",
+    "tables": "Clean, dense rows (p-3), alternating very subtle background tints, distinct status badges for garment conditions.",
+    "icons": "lucide-react, line style, 2px stroke width."
+  },
+  "media": {
+    "logo": {
+      "url": "https://www.mud-patch.com/mudpatch/main_logo.png",
+      "description": "Mud Patch official logo"
+    },
+    "hero_background": {
+      "url": "https://images.unsplash.com/photo-1714807338675-e711f1d7164e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDV8MHwxfHNlYXJjaHwyfHxsZWFmJTIwdGV4dHVyZSUyMGJhY2tncm91bmR8ZW58MHx8fHwxNzc0NTg5Mzg5fDA&ixlib=rb-4.1.0&q=85",
+      "description": "Abstract green leaf texture for login or empty states"
+    },
+    "thumbnails": [
+      {
+        "url": "https://images.unsplash.com/photo-1705248382842-e5c7fddde756?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MDV8MHwxfHNlYXJjaHwyfHxzdXN0YWluYWJsZSUyMGZhc2hpb24lMjBmb2xkZWQlMjBjbG90aGVzfGVufDB8fHx8MTc3NDU4OTM4MXww&ixlib=rb-4.1.0&q=85",
+        "description": "Folded sustainable fashion items"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1718128306989-a5bd41566cde?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MDV8MHwxfHNlYXJjaHwxfHxzdXN0YWluYWJsZSUyMGZhc2hpb24lMjBmb2xkZWQlMjBjbG90aGVzfGVufDB8fHx8MTc3NDU4OTM4MXww&ixlib=rb-4.1.0&q=85",
+        "description": "Clothing label close up"
+      },
+      {
+        "url": "https://images.pexels.com/photos/7018653/pexels-photo-7018653.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Warehouse processing/checking clothes"
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Strictly follow the 'Organic Earthy' archetype. Do not use harsh black or pure gray; instead, tint grays with slight green/brown hues.",
+    "The application is a functional SaaS dashboard. Prioritize readability, scanability, and clear data hierarchy.",
+    "Implement the RVS (Reusability Value Score) formula visualization prominently as it's the core feature.",
+    "Use Shadcn UI components extensively but customize the border radii and color palette to match these guidelines.",
+    "Ensure all interactive elements have a `data-testid` attribute (e.g., `data-testid=\"upload-garment-button\"`).",
+    "Use 'Outfit' for all headings and 'Figtree' for body copy. Update Tailwind config to reflect these fonts.",
+    "Integrate Recharts for analytics on the Super Admin Dashboard."
+  ]
+}
