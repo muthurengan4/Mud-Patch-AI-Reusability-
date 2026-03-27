@@ -1,34 +1,129 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+/* Custom styles for Mud Patch Garment Reusability AI */
+
+/* RVS Gauge Animation */
+@keyframes gauge-fill {
+  from {
+    stroke-dashoffset: var(--circumference);
+  }
+  to {
+    stroke-dashoffset: var(--progress);
+  }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+/* Card hover effects */
+.card-hover {
+  transition: all 0.3s ease;
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px -4px rgba(56, 102, 65, 0.1);
 }
 
-.App-link {
-    color: #61dafb;
+/* Status badges */
+.badge-resale {
+  background-color: #10b981;
+  color: white;
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+.badge-refurbish {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.badge-recycle {
+  background-color: #14b8a6;
+  color: white;
+}
+
+.badge-downcycle {
+  background-color: #d97757;
+  color: white;
+}
+
+.badge-waste {
+  background-color: #ef4444;
+  color: white;
+}
+
+/* Progress bar customization */
+.progress-green [data-state="complete"],
+.progress-green [data-state="indeterminate"] {
+  background-color: #386641;
+}
+
+/* File drop zone */
+.drop-zone {
+  transition: all 0.2s ease;
+}
+
+.drop-zone:hover {
+  border-color: #386641;
+  background-color: rgba(56, 102, 65, 0.02);
+}
+
+.drop-zone.active {
+  border-color: #a7c957;
+  background-color: rgba(167, 201, 87, 0.1);
+}
+
+/* Camera preview */
+.camera-preview {
+  aspect-ratio: 4/3;
+  object-fit: cover;
+}
+
+/* Table row hover */
+.table-row-hover:hover {
+  background-color: rgba(56, 102, 65, 0.02);
+}
+
+/* Custom scrollbar for scroll areas */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f4f7f4;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #a7c957;
+  border-radius: 3px;
+}
+
+/* Animation for results */
+.result-enter {
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Focus ring override */
+*:focus-visible {
+  outline: 2px solid #a7c957;
+  outline-offset: 2px;
+}
+
+/* Button active state */
+button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Tooltip customization */
+[role="tooltip"] {
+  background-color: #1f2923;
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
 }
