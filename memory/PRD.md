@@ -26,6 +26,8 @@ Build the Mud Patch Garment Reusability AI Engine based on the provided PDF spec
 - [x] Brand management with categories
 - [x] Product category management with market demand scores
 - [x] Analysis history
+- [x] QR code generation post-analysis
+- [x] Shareable certificate page (/share/:analysisId)
 
 ### Should Have (P1)
 - [ ] User authentication
@@ -40,7 +42,7 @@ Build the Mud Patch Garment Reusability AI Engine based on the provided PDF spec
 - [ ] Analytics dashboard with trends
 
 ## Architecture
-- **Frontend**: React 19 + Tailwind CSS + Shadcn UI
+- **Frontend**: React 19 + Tailwind CSS + Shadcn UI + qrcode.react
 - **Backend**: FastAPI (Python)
 - **Database**: MongoDB
 - **AI Integration**: Claude Sonnet 4.5 via emergentintegrations library
@@ -60,6 +62,9 @@ Build the Mud Patch Garment Reusability AI Engine based on the provided PDF spec
 - RVS circular gauge visualization
 - Score breakdown component
 - AI analysis details display
+- **QR Code generation** with Mud Patch logo embedded
+- **Shareable certificate page** at /share/:analysisId
+- Copy link, download QR, view page buttons
 - History page with analysis records
 - Admin dashboard with 3 tabs:
   - Formula Weights (adjustable sliders)

@@ -264,9 +264,20 @@ const QRCodeCard = ({ analysisId, result }) => {
   const [showQR, setShowQR] = useState(false);
   const shareUrl = `${window.location.origin}/share/${analysisId}`;
   
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(shareUrl);
-    toast.success("Link copied to clipboard!");
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Link copied to clipboard!");
+    } catch (err) {
+      // Fallback for environments where clipboard API is not available
+      const textArea = document.createElement("textarea");
+      textArea.value = shareUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      toast.success("Link copied to clipboard!");
+    }
   };
 
   const downloadQR = () => {
