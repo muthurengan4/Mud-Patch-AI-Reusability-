@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route, NavLink, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, NavLink, useLocation, useParams } from "react-router-dom";
 import axios from "axios";
 import { Toaster, toast } from "sonner";
+import { QRCodeSVG } from "qrcode.react";
 import {
   Leaf, Upload, Camera, History, Settings, Recycle, TrendingUp,
   Shirt, Tag, DollarSign, AlertTriangle, CheckCircle, X, Loader2,
-  Plus, Trash2, Edit2, Save, RefreshCw, BarChart3, Package, Award
+  Plus, Trash2, Edit2, Save, RefreshCw, BarChart3, Package, Award,
+  QrCode, Share2, Download, Copy, ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -257,6 +259,106 @@ const ScoreBreakdown = ({ result }) => {
   );
 };
 
+// ============== QR CODE COMPONENT ==============
+const QRCodeCard = ({ analysisId, result }) => {
+  const [showQR, setShowQR] = useState(false);
+  const shareUrl = `${window.location.origin}/share/${analysisId}`;
+  
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(shareUrl);
+    toast.success("Link copied to clipboard!");
+  };
+
+  const downloadQR = () => {
+    const svg = document.getElementById("qr-code-svg");
+    if (svg) {
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const img = new Image();
+      img.onload = () => {
+        canvas.width = 300;
+        canvas.height = 300;
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, 300, 300);
+        ctx.drawImage(img, 0, 0, 300, 300);
+        const pngUrl = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        link.download = `mudpatch-rvs-${result.rvs_total.toFixed(0)}.png`;
+        link.href = pngUrl;
+        link.click();
+      };
+      img.src = "data:image/svg+xml;base64," + btoa(svgData);
+    }
+  };
+
+  return (
+    <Card className="shadow-card">
+      <CardHeader>
+        <CardTitle className="font-heading text-lg flex items-center gap-2">
+          <QrCode className="w-5 h-5 text-primary" />
+          Share Analysis
+        </CardTitle>
+        <CardDescription>Share your garment reusability score via QR code or link</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex flex-col items-center gap-4">
+          <div className="bg-white p-4 rounded-lg border border-border shadow-sm">
+            <QRCodeSVG
+              id="qr-code-svg"
+              value={shareUrl}
+              size={180}
+              level="H"
+              includeMargin={true}
+              fgColor="#386641"
+              bgColor="#ffffff"
+              imageSettings={{
+                src: "https://www.mud-patch.com/mudpatch/main_logo.png",
+                height: 35,
+                width: 35,
+                excavate: true,
+              }}
+            />
+          </div>
+          
+          <div className="flex flex-wrap gap-2 justify-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={copyToClipboard}
+              data-testid="copy-share-link"
+            >
+              <Copy className="w-4 h-4 mr-2" />
+              Copy Link
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={downloadQR}
+              data-testid="download-qr"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download QR
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => window.open(shareUrl, "_blank")}
+              data-testid="view-share-page"
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              View Page
+            </Button>
+          </div>
+          
+          <div className="w-full bg-secondary/50 rounded-lg p-3">
+            <p className="text-xs text-text-muted text-center break-all">{shareUrl}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 // ============== ANALYSIS RESULTS ==============
 const AnalysisResults = ({ result }) => {
   if (!result) return null;
@@ -349,6 +451,9 @@ const AnalysisResults = ({ result }) => {
           )}
         </CardContent>
       </Card>
+
+      {/* QR Code Share Card */}
+      <QRCodeCard analysisId={result.id} result={result} />
     </div>
   );
 };
@@ -1008,6 +1113,11 @@ const AdminDashboard = () => {
 // ============== NAVIGATION ==============
 const Navigation = () => {
   const location = useLocation();
+  
+  // Hide navigation on share page
+  if (location.pathname.startsWith("/share/")) {
+    return null;
+  }
 
   const navItems = [
     { path: "/", label: "Analyze", icon: Recycle },
@@ -1055,19 +1165,222 @@ const Navigation = () => {
   );
 };
 
+// ============== SHARE PAGE ==============
+const SharePage = () => {
+  const { analysisId } = useParams();
+  const [result, setResult] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchAnalysis();
+  }, [analysisId]);
+
+  const fetchAnalysis = async () => {
+    try {
+      const res = await axios.get(`${API}/history`);
+      const analysis = res.data.find(a => a.id === analysisId);
+      if (analysis) {
+        setResult(analysis);
+      } else {
+        setError("Analysis not found");
+      }
+    } catch (err) {
+      setError("Failed to load analysis");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getActionBadgeClass = (action) => {
+    const classes = {
+      "Full Resale": "bg-status-resale text-white",
+      "Refurbish & Resale": "bg-status-refurbish text-white",
+      "Recycle Fabric": "bg-status-recycle text-white",
+      "Downcycle": "bg-status-downcycle text-white",
+      "Waste": "bg-status-waste text-white",
+    };
+    return classes[action] || "bg-gray-500 text-white";
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error || !result) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <AlertTriangle className="w-12 h-12 text-status-waste" />
+        <h1 className="text-xl font-heading font-semibold">{error || "Analysis not found"}</h1>
+        <Button onClick={() => window.location.href = "/"}>
+          Go to Home
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background" data-testid="share-page">
+      {/* Header */}
+      <div className="bg-primary text-white py-6">
+        <div className="max-w-2xl mx-auto px-4 text-center">
+          <img
+            src="https://www.mud-patch.com/mudpatch/main_logo.png"
+            alt="Mud Patch"
+            className="h-10 mx-auto mb-4 brightness-0 invert"
+          />
+          <h1 className="text-2xl font-heading font-bold">Garment Reusability Certificate</h1>
+          <p className="text-primary-foreground/80 mt-1">Powered by AI Vision Analysis</p>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+        {/* RVS Score Card */}
+        <Card className="shadow-hover border-2 border-primary/20">
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center gap-6">
+              <RVSGauge score={result.rvs_total} size={220} />
+              
+              <div className="text-center space-y-3">
+                <Badge className={`${getActionBadgeClass(result.suggested_action)} text-xl px-6 py-3`}>
+                  {result.suggested_action}
+                </Badge>
+                
+                {result.retail_price > 0 && (
+                  <div className="bg-primary/10 rounded-lg p-4 mt-4">
+                    <p className="text-sm text-text-secondary">Eligible Return Credit</p>
+                    <p className="text-4xl font-heading font-bold text-primary">
+                      ${result.return_credit.toFixed(2)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Analysis Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-heading">Analysis Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-secondary/30 rounded-lg p-3">
+                <p className="text-xs text-text-muted">Fabric Type</p>
+                <p className="font-semibold">{result.ai_analysis?.fabric_type || "Unknown"}</p>
+              </div>
+              <div className="bg-secondary/30 rounded-lg p-3">
+                <p className="text-xs text-text-muted">Condition</p>
+                <p className="font-semibold">{result.ai_analysis?.overall_condition || "N/A"}</p>
+              </div>
+              <div className="bg-secondary/30 rounded-lg p-3">
+                <p className="text-xs text-text-muted">Brand</p>
+                <p className="font-semibold">{result.ai_analysis?.brand_detected || "Not identified"}</p>
+              </div>
+              <div className="bg-secondary/30 rounded-lg p-3">
+                <p className="text-xs text-text-muted">AI Confidence</p>
+                <p className="font-semibold">{((result.ai_analysis?.confidence || 0) * 100).toFixed(0)}%</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Score Breakdown */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-heading">Score Breakdown</CardTitle>
+            <CardDescription>RVS = (Q×0.30) + (W×0.25) + (C×0.15) + (A×0.15) + (B×0.10) + (M×0.05)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ScoreBreakdown result={result} />
+          </CardContent>
+        </Card>
+
+        {/* Damage/Stain Info */}
+        {(result.ai_analysis?.damage_detected?.length > 0 || result.ai_analysis?.stain_detected) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-heading">Issues Detected</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {result.ai_analysis?.damage_detected?.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {result.ai_analysis.damage_detected.map((damage, idx) => (
+                    <Badge key={idx} variant="outline" className="border-status-waste text-status-waste">
+                      <AlertTriangle className="w-3 h-3 mr-1" />
+                      {damage}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+              {result.ai_analysis?.stain_detected && (
+                <div className="flex items-center gap-2 text-status-refurbish">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span>Stains: {result.ai_analysis.stain_area_percentage}% area</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Footer */}
+        <div className="text-center pt-4 border-t border-border">
+          <p className="text-sm text-text-muted">
+            Analysis Date: {new Date(result.created_at).toLocaleDateString()}
+          </p>
+          <p className="text-xs text-text-muted mt-2">
+            This certificate was generated by Mud Patch Reusability AI Engine
+          </p>
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={() => window.location.href = "/"}
+          >
+            <Recycle className="w-4 h-4 mr-2" />
+            Analyze Your Garment
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ============== MAIN APP ==============
 function App() {
+  const ShareWrapper = () => {
+    const location = useLocation();
+    const isSharePage = location.pathname.startsWith("/share/");
+    
+    return (
+      <>
+        <Navigation />
+        {isSharePage ? (
+          <Routes>
+            <Route path="/share/:analysisId" element={<SharePage />} />
+          </Routes>
+        ) : (
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/history" element={<HistoryPage />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+            </Routes>
+          </main>
+        )}
+      </>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-background font-body">
       <BrowserRouter>
-        <Navigation />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/history" element={<HistoryPage />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-          </Routes>
-        </main>
+        <ShareWrapper />
       </BrowserRouter>
       <Toaster richColors position="top-right" />
     </div>
