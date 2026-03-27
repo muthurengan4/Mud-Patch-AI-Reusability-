@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timezone
-from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+import anthropic
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -20,8 +20,9 @@ mongo_url = os.environ.get('MONGO_URL')
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ.get('DB_NAME', 'mudpatch_db')]
 
-# Emergent LLM Key
-EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY', '')
+# Anthropic API Key - Use ANTHROPIC_API_KEY for standard deployment
+# or EMERGENT_LLM_KEY for Emergent platform
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY') or os.environ.get('EMERGENT_LLM_KEY', '')
 
 # Create the main app
 app = FastAPI()
@@ -198,14 +199,42 @@ def get_suggested_action(rvs: float) -> tuple:
         return "Waste", "#ef4444"
 
 async def analyze_garment_with_ai(image_base64: str) -> AIAnalysisResult:
+    """Analyze garment image using Anthropic Claude API"""
     try:
-        chat = LlmChat(
-            api_key=EMERGENT_LLM_KEY,
-            session_id=f"garment-analysis-{uuid.uuid4()}",
-            system_message="""You are an expert garment condition analyzer for the Mud Patch circular fashion platform. 
-Analyze the garment image and provide detailed assessment in JSON format only.
+        # Initialize Anthropic client
+        anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        
+        # Determine media type (default to jpeg)
+        media_type = "image/jpeg"
+        if image_base64.startswith("/9j/"):
+            media_type = "image/jpeg"
+        elif image_base64.startswith("iVBOR"):
+            media_type = "image/png"
+        elif image_base64.startswith("UklGR"):
+            media_type = "image/webp"
+        
+        # Create message with vision
+        message = anthropic_client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=1024,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": media_type,
+                                "data": image_base64,
+                            },
+                        },
+                        {
+                            "type": "text",
+                            "text": """You are an expert garment condition analyzer for the Mud Patch circular fashion platform. 
+Analyze this garment image and provide detailed assessment.
 
-Respond ONLY with a valid JSON object (no markdown, no explanation) with these exact fields:
+Respond ONLY with a valid JSON object (no markdown, no explanation, no code blocks) with these exact fields:
 {
     "fabric_type": "string - e.g., Cotton, Polyester, Wool, Silk, Linen, Blend, Unknown",
     "fabric_quality_score": "integer 0-100 based on fabric type and visual quality",
@@ -218,23 +247,20 @@ Respond ONLY with a valid JSON object (no markdown, no explanation) with these e
     "overall_condition": "string - Excellent/Good/Fair/Poor/Very Poor",
     "confidence": "float 0-1 confidence in analysis"
 }"""
-        ).with_model("anthropic", "claude-sonnet-4-5-20250929")
-
-        image_content = ImageContent(image_base64=image_base64)
-        
-        user_message = UserMessage(
-            text="Analyze this garment image for reusability assessment. Identify fabric type, any damage (holes, tears, fading, loose threads), stains, brand/logo if visible, and overall condition. Respond with JSON only.",
-            file_contents=[image_content]
+                        }
+                    ],
+                }
+            ],
         )
         
-        response = await chat.send_message(user_message)
-        logger.info(f"AI Response: {response}")
+        response_text = message.content[0].text
+        logger.info(f"AI Response: {response_text}")
         
         # Parse JSON response
         import json
         try:
             # Clean the response - remove markdown code blocks if present
-            clean_response = response.strip()
+            clean_response = response_text.strip()
             if clean_response.startswith("```"):
                 clean_response = clean_response.split("```")[1]
                 if clean_response.startswith("json"):
